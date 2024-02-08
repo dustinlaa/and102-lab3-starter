@@ -1,15 +1,11 @@
 package com.codepath.bestsellerlistapp
 
-import android.content.Intent
-import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.codepath.bestsellerlistapp.R.id
@@ -20,10 +16,17 @@ import com.codepath.bestsellerlistapp.R.id
  */
 class BestSellerBooksRecyclerViewAdapter(
     private val books: List<BestSellerBook>,
-    private val mListener: OnListFragmentInteractionListener?
+    private val mListener: OnListFragmentInteractionListener?,
+    val listener: OnClickListener
     )
     : RecyclerView.Adapter<BestSellerBooksRecyclerViewAdapter.BookViewHolder>()
     {
+
+
+        interface OnClickListener {
+            fun onClick (position: BestSellerBook)
+        }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.fragment_best_seller_book, parent, false)
@@ -70,13 +73,16 @@ class BestSellerBooksRecyclerViewAdapter(
                 mListener?.onItemClick(book)
             }
         }
-
-        holder.mBuyButton.setOnClickListener {
-//            val url = book.amazonUrl.toString()
-//            Log.v("BestSellerBooks", url)
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(book.amazonUrl))
-            startActivity(it.context, browserIntent, null)
+        holder.mBuyButton.setOnClickListener{
+            listener.onClick(book)
         }
+
+//        holder.mBuyButton.setOnClickListener {
+////            val url = book.amazonUrl.toString()
+////            Log.v("BestSellerBooks", url)
+//            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(book.amazonUrl))
+//            startActivity(it.context, browserIntent, null)
+//        }
     }
 
     /**

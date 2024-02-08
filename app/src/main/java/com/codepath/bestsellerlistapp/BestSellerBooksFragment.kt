@@ -1,5 +1,7 @@
 package com.codepath.bestsellerlistapp
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.codepath.asynchttpclient.AsyncHttpClient
 import com.codepath.asynchttpclient.RequestParams
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler
-import com.codepath.bestsellerlistapp.R
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import okhttp3.Headers
 import org.json.JSONObject
@@ -29,7 +29,7 @@ private const val API_KEY = "I4eUkyQGAzBDgRFZTUiGxcNBATc9LESh"
  * The class for the only fragment in the app, which contains the progress bar,
  * recyclerView, and performs the network calls to the NY Times API.
  */
-class BestSellerBooksFragment : Fragment(), OnListFragmentInteractionListener {
+class BestSellerBooksFragment : Fragment() {
 
     /*
      * Constructing the view
@@ -62,69 +62,76 @@ class BestSellerBooksFragment : Fragment(), OnListFragmentInteractionListener {
         client[
             "https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json",
             params,
-            object : JsonHttpResponseHandler()
-            { //connect these callbacks to your API call
-            /*
-             * The onSuccess function gets called when
-             * HTTP response status is "200 OK"
-             */
-            override fun onSuccess(
-                statusCode: Int,
-                headers: Headers,
-                json: JsonHttpResponseHandler.JSON
-            ) {
-                // The wait for a response is over
-                progressBar.hide()
+            object : JsonHttpResponseHandler() { //connect these callbacks to your API call
+                /*
+                 * The onSuccess function gets called when
+                 * HTTP response status is "200 OK"
+                 */
+                override fun onSuccess(
+                    statusCode: Int,
+                    headers: Headers,
+                    json: JsonHttpResponseHandler.JSON
+                ) {
+                    // The wait for a response is over
+                    progressBar.hide()
 
-                //TODO - Parse JSON into Models
+                    //TODO - Parse JSON into Models
 
 //                val jsonVal = json.toString()
 //                Log.v("BestSellerBooksFragment", jsonVal)
 
-                // Get results
-                val resultsJSON : JSONObject = json.jsonObject.get("results") as JSONObject
-                // Get Books
-                val booksRawJSON : String = resultsJSON.get("books").toString()
+                    // Get results
+                    val resultsJSON: JSONObject = json.jsonObject.get("results") as JSONObject
+                    // Get Books
+                    val booksRawJSON: String = resultsJSON.get("books").toString()
 //                Log.v("BestSellerBooksFragment", booksRawJSON)
-                val gson = Gson()
+                    val gson = Gson()
 
-                val arrayBookType = object : TypeToken<List<BestSellerBook>>() {}.type
+                    val arrayBookType = object : TypeToken<List<BestSellerBook>>() {}.type
 
-                val models : List<BestSellerBook> = gson.fromJson(booksRawJSON, arrayBookType)
-                recyclerView.adapter = BestSellerBooksRecyclerViewAdapter(models, this@BestSellerBooksFragment)
+                    val models: List<BestSellerBook> = gson.fromJson(booksRawJSON, arrayBookType)
+                    recyclerView.adapter = BestSellerBooksRecyclerViewAdapter(
+                        models,
+                        object : OnListFragmentInteractionListener{
+                            override fun onItemClick(item: BestSellerBook) {
+                                Toast.makeText(context, "Book: " + item.title, Toast.LENGTH_SHORT).show()
 
-                // Look for this in Logcat:
-                Log.d("BestSellerBooksFragment", "response successful")
-            }
+                            }
+                        },
+                        object : BestSellerBooksRecyclerViewAdapter.OnClickListener {
+                            override fun onClick(book: BestSellerBook) {
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(book.amazonUrl))
+                                startActivity(browserIntent)
 
-            /*
-             * The onFailure function gets called when
-             * HTTP response status is "4XX" (eg. 401, 403, 404)
-             */
-            override fun onFailure(
-                statusCode: Int,
-                headers: Headers?,
-                errorResponse: String,
-                t: Throwable?
-            ) {
-                // The wait for a response is over
-                progressBar.hide()
+                            }
+                        }
+                    )
 
-                // If the error is not null, log it!
-                t?.message?.let {
-                    Log.e("BestSellerBooksFragment", errorResponse)
+                    // Look for this in Logcat:
+                    Log.d("BestSellerBooksFragment", "response successful")
                 }
-            }
-        }]
+
+                /*
+                 * The onFailure function gets called when
+                 * HTTP response status is "4XX" (eg. 401, 403, 404)
+                 */
+                override fun onFailure(
+                    statusCode: Int,
+                    headers: Headers?,
+                    errorResponse: String,
+                    t: Throwable?
+                ) {
+                    // The wait for a response is over
+                    progressBar.hide()
+
+                    // If the error is not null, log it!
+                    t?.message?.let {
+                        Log.e("BestSellerBooksFragment", errorResponse)
+                    }
+                }
+            }]
         //*/
 
-    }
-
-    /*
-     * What happens when a particular book is clicked.
-     */
-    override fun onItemClick(item: BestSellerBook) {
-        Toast.makeText(context, "Book: " + item.title, Toast.LENGTH_LONG).show()
     }
 
 }
